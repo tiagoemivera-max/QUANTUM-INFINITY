@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Space Observatory</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1724;
+      --muted:#94a3b8;
+      --accent:#7dd3fc;
+      --accent-hover:#38bdf8;
+      --glass: rgba(255,255,255,0.03);
+      --card: rgba(255,255,255,0.05);
+      --radius:16px;
+      color: #e6eef8;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    
+    * { margin:0; padding:0; box-sizing: border-box; }
+    
+    body { 
+      background: linear-gradient(180deg, #030712 0%, #0c1222 50%, #0a1628 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated starfield background */
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle linear infinite;
+    }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(11, 18, 32, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--accent);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+    
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--accent);
+    }
+    
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+    }
+    
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      max-width: 900px;
+    }
+    
+    .hero h1 {
+      font-size: clamp(40px, 8vw, 72px);
+      font-weight: 800;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+    
+    .hero p {
+      font-size: clamp(18px, 3vw, 24px);
+      color: var(--muted);
+      margin-bottom: 48px;
+      line-height: 1.6;
+    }
+    
+    .cta-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 16px 36px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #0ea5e9 100%);
+      color: #000;
+      box-shadow: 0 8px 24px rgba(125, 211, 252, 0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(125, 211, 252, 0.4);
+    }
+    
+    .btn-secondary {
+      background: var(--glass);
+      color: var(--accent);
+      border: 1px solid rgba(125, 211, 252, 0.2);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(125, 211, 252, 0.1);
+      border-color: var(--accent);
+    }
+
+    /* Features Section */
+    .features {
+      position: relative;
+      z-index: 10;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      margin-bottom: 64px;
+      color: #fff;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+    }
+    
+    .feature-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-8px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(125, 211, 252, 0.3);
+      box-shadow: 0 16px 40px rgba(125, 211, 252, 0.15);
+    }
+    
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      display: block;
+    }
+    
+    .feature-card h3 {
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    
+    .feature-card p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* VR Button */
+    .vr-button {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 1000;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%);
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(125, 211, 252, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .vr-button:hover {
+      transform: scale(1.1) translateY(-4px);
+      box-shadow: 0 12px 48px rgba(125, 211, 252, 0.6);
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    }
+    
+    .vr-button:active {
+      transform: scale(1.05);
+    }
+    
+    .vr-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 8px 32px rgba(125, 211, 252, 0.4);
+      }
+      50% {
+        box-shadow: 0 8px 48px rgba(125, 211, 252, 0.7);
+      }
+    }
+
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links {
+        gap: 16px;
+        font-size: 14px;
+      }
+      
+      .hero {
+        padding: 100px 20px 60px;
+      }
+      
+      .cta-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .vr-button {
+        width: 60px;
+        height: 60px;
+        bottom: 24px;
+        right: 24px;
+      }
+      
+      .vr-icon {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Starfield background -->
+  <div class="stars" id="starfield"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" class="atom-logo">
+          <!-- Núcleo central -->
+          <circle cx="12" cy="12" r="2" fill="currentColor" opacity="1">
+            <animate attributeName="r" values="2;2.5;2" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          
+          <!-- Órbita 1 (horizontal) -->
+          <ellipse cx="12" cy="12" rx="9" ry="3" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6">
+            <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="3s" repeatCount="indefinite"/>
+          </ellipse>
+          
+          <!-- Órbita 2 (diagonal 1) -->
+          <ellipse cx="12" cy="12" rx="9" ry="3" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6">
+            <animateTransform attributeName="transform" type="rotate" from="60 12 12" to="420 12 12" dur="3s" repeatCount="indefinite"/>
+          </ellipse>
+          
+          <!-- Órbita 3 (diagonal 2) -->
+          <ellipse cx="12" cy="12" rx="9" ry="3" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6">
+            <animateTransform attributeName="transform" type="rotate" from="120 12 12" to="480 12 12" dur="3s" repeatCount="indefinite"/>
+          </ellipse>
+          
+          <!-- Electrones -->
+          <circle r="1.5" fill="currentColor" opacity="0.9">
+            <animateMotion dur="3s" repeatCount="indefinite" path="M 12,12 m -9,0 a 9,3 0 1,0 18,0 a 9,3 0 1,0 -18,0"/>
+          </circle>
+          <circle r="1.5" fill="currentColor" opacity="0.9">
+            <animateMotion dur="3s" repeatCount="indefinite" path="M 12,12 m -9,0 a 9,3 0 1,0 18,0 a 9,3 0 1,0 -18,0" begin="1s"/>
+          </circle>
+          <circle r="1.5" fill="currentColor" opacity="0.9">
+            <animateMotion dur="3s" repeatCount="indefinite" path="M 12,12 m -9,0 a 9,3 0 1,0 18,0 a 9,3 0 1,0 -18,0" begin="2s"/>
+          </circle>
+        </svg>
+        <span> <h3>Quantum Infinity</h3> </span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#" class="active">Home</a></li>
+        <li><a href="Observatory.html">Observatory</a></li>
+        <li><a href="#info">Info</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Explore the Universe in Real Time</h1>
+      <p>Connect with a virtual observatory, explore NASA's gallery and information, and discover the secrets of the cosmos from your browser.</p>
+      <div class="cta-buttons">
+        <a href="Observatory.html" class="btn btn-primary">
+          🚀 Open Observatory
+        </a>
+        <a href="#features" class="btn btn-secondary">
+          📖 Learn More
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <h2 class="section-title">Main Features</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🌌</span>
+        <h3>Interactive Sky Map</h3>
+        <p>Visualize the sky in real time with integrated Stellarium Web. Explore constellations, planets, and deep space objects.</p>
+      </div>
+      
+      <div class="feature-card">
+        <span class="feature-icon">🛰️</span>
+        <h3>NASA Gallery</h3>
+        <p>Access thousands of images and videos from NASA. Search for space missions, planets, galaxies, and astronomical events.</p>
+      </div>
+      
+      <div class="feature-card">
+        <span class="feature-icon">📡</span>
+        <h3>Real-Time Data</h3>
+        <p>Get updated information every 5 seconds from Stellarium: azimuth, altitude, and location settings.</p>
+      </div>
+      
+      <div class="feature-card">
+        <span class="feature-icon">🎓</span>
+        <h3>Educational and Free</h3>
+        <p>Perfect tool for students, educators, and space enthusiasts. No costs or registration required.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Info Section -->
+  <section class="features" id="info">
+    <h2 class="section-title">Information</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">1️⃣</span>
+        <h3>Project Purpose</h3>
+        <p>Develop an interactive tool that enables visualization, exploration, and analysis of large-format images with high precision and fluidity, facilitating data interpretation and collaborative work in scientific, educational, and technological contexts.</p>
+      </div>
+      
+      <div class="feature-card">
+        <span class="feature-icon">2️⃣</span>
+        <h3>Future Vision</h3>
+        <p>Establish itself as a reference platform for visual analysis of high-resolution images, driving innovation in space research, geographic, medical, and academic projects through an accessible, agile environment adaptable to diverse needs.</p>
+      </div>
+      
+      <div class="feature-card">
+        <span class="feature-icon">3️⃣</span>
+        <h3>Project Goals</h3>
+        <p>Implement a software prototype that allows visualization of large-scale images with deep zoom capabilities and dynamic tagging, promoting collaborative information interpretation.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">4️⃣</span>
+        <h3>How We'll Achieve It</h3>
+        <p>Incorporate an interactive viewer that enables navigation with high performance and fluidity through zoom and pan functions; create a tagging and search system that facilitates identification of astronomical elements; and design a simple, lightweight, and pleasant interface that enhances user experience and promotes teamwork.</p>
+      </div>
+    </div>
+    
+    <div style="text-align:center; margin-top:64px; padding:32px; background:var(--card); border-radius:var(--radius); border:1px solid rgba(255,255,255,0.06);">
+      <h3 style="color:#fff; margin-bottom:16px;">💡 Developers</h3>
+      <p style="color:var(--muted); line-height:1.8; max-width:700px; margin:0 auto;">
+        •
+        <strong>Yorli Tatiana Soto</strong> (Telecommunications Engineering) •
+        <strong>Andres David Bautista</strong> (Multimedia Engineering) •
+        <strong>Adrian David Bolivar</strong> (Systems Engineering) •
+        <strong>Carlos Pineda</strong> (Multimedia Engineering) •
+        <strong>Samir Moreno</strong> (Industrial Engineering) •
+        <strong>Victor Manuel Patiño</strong> (Electronic Engineering)
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      <strong>Interactive Space Observatory - Quantum Infinity</strong> • Educational Project<br>
+      Powered by <a href="https://stellarium-web.org" target="_blank">Stellarium Web</a> & 
+      <a href="https://api.nasa.gov" target="_blank">NASA Open APIs</a>
+    </p>
+    <p style="margin-top:16px; font-size:14px;">
+      Developed with ❤️ to explore the cosmos • Open Source
+    </p>
+  </footer>
+
+  <!-- VR Button -->
+  <a href="https://stellarium-web.org" target="_blank" class="vr-button" title="VR Mode - Explore in Stellarium">
+    <span class="vr-icon">👓</span>
+  </a>
+
+  <script>
+    // Generate animated starfield
+    const starfield = document.getElementById('starfield');
+    const starCount = 100;
+    
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      
+      const size = Math.random() * 2 + 1;
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const duration = Math.random() * 3 + 2;
+      const delay = Math.random() * 5;
+      
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      star.style.left = `${x}%`;
+      star.style.top = `${y}%`;
+      star.style.animationDuration = `${duration}s`;
+      star.style.animationDelay = `${delay}s`;
+      
+      starfield.appendChild(star);
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href !== '#') {
+          e.preventDefault();
+          const target = document.querySelector(href);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      });
+    });
+
+    // Update active nav link on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (window.scrollY >= sectionTop - 200) {
+          current = section.getAttribute('id');
+        }
+      });
+      
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (current && link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        } else if (!current && link.getAttribute('href') === '#') {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
